@@ -1,12 +1,16 @@
-class BusinessSmsController < ActionController
+class BusinessSmsController < ApplicationController
+	include Webhookable
+
+	after_filter :set_header
+  
+  	skip_before_action :verify_authenticity_token
 
 	def signup_business
 		business_landline_number = params[:Body]
 		business_mobile_number = params[:From]
-		unless Business.find_by(business_phone_number)
+		unless Business.find_by(mobile_number: business_mobile_number)
 			business = Business.create(landline_number: business_landline_number, mobile_number: business_mobile_number)
-			if business
-				business.create_twilio_number	
+			if business	
 				business.passed_confirmation
 			else
 				Business.send_landline_parsing_error_sms(business_mobile_number)
@@ -14,6 +18,11 @@ class BusinessSmsController < ActionController
 		else
 			Business.send_business_found_sms(business_mobile_number)
 		end
+
+		response = Twilio::TwiML::Response.new do |r|
+    	end
+
+    	render_twiml response
 	end
 
 	def recieve_sms
@@ -28,6 +37,11 @@ class BusinessSmsController < ActionController
 		else
 			Business.send_business_not_found_sms(customer_mobile_number)
 		end
+
+		response = Twilio::TwiML::Response.new do |r|
+    	end
+
+    	render_twiml response
 	end
 
 	private

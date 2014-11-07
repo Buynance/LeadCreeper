@@ -32,7 +32,7 @@ class Business < ActiveRecord::Base
 	def parse_landline_number     
 		phone_number_object = GlobalPhone.parse(self.landline_number)
 		phone_number_object = nil if (phone_number_object != nil and phone_number_object.territory.name != "US")
-		if phone_number_object.nil? or self.phone_number.length < 10
+		if phone_number_object.nil? or self.landline_number.length < 10
 		  self.mobile_number = nil
 		else
 		  self.mobile_number = phone_number_object.international_string
@@ -48,7 +48,7 @@ class Business < ActiveRecord::Base
     end
 
     def self.search_by_mobile_number(mobile_number)
-      Business.where(state: "accepted").find_by(mobile_number: GlobalPhone.parse(mobile_number).international_string)
+      Business.where(state: "accepted").find_by(twilio_number: GlobalPhone.parse(mobile_number).international_string)
     end
 
 
@@ -61,7 +61,7 @@ class Business < ActiveRecord::Base
     end
 
     def create_twilio_number
-    	self.twilio_number = TwilioLib.create_phone_number(self.mobile_number,  {sms_url: "http://buynance-sms.herokuapp.com/businesses/#{self.id}/sms/recieve_sms"})
+    	self.twilio_number = TwilioLib.create_phone_number(self.mobile_number,  {sms_url: "http://buynance-sms.ngrok.com/businesses/#{self.id}/sms/recieve_sms"})
     end
 
     def find_customer_by_mobile_number(mobile_number)
