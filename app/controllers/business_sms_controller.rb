@@ -55,21 +55,22 @@ class BusinessSmsController < ApplicationController
 				unless customer
 					new_customer = Customer.create(mobile_number: customer_mobile_number)
 					business.customers << new_customer
+					Customer.send_subscription_confirmation(new_customer.mobile_number, business.mobile_number)
 				else
 					subscription = BusinessesCustomer.where(business_id: business.id, customer_id: customer.id).last
 					if subscription.subscribed?
 						if params[:Body] == "remove"
 							subscription.unsubscribe
-							Business.send_custumer_unsubscribe_sms(customer_mobile_number)
+							business.send_customer_unsubscribe_sms(customer_mobile_number)
 						else
-						  	Business.send_customer_found_sms(customer_mobile_number)
+						  	business.send_customer_found_sms(customer_mobile_number)
 						end
 					elsif subscription.unsubscribed?
 						if params[:Body] == "remove"
-							Business.send_custumer_unsubscribe_sms(customer_mobile_number)
+							business.send_customer_unsubscribe_sms(customer_mobile_number)
 						else
 							subscription.subscribe
-						  	Customer.send_subscription_confirmation(customer_mobile_number)
+						  	Customer.send_subscription_confirmation(customer_mobile_number, business.mobile_number)
 						end
 					end
 				end
