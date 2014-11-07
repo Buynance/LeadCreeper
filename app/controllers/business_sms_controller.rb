@@ -55,7 +55,7 @@ class BusinessSmsController < ApplicationController
 				unless customer
 					new_customer = Customer.create(mobile_number: customer_mobile_number)
 					business.customers << new_customer
-					Customer.send_subscription_confirmation(new_customer.mobile_number, business.mobile_number)
+					Customer.send_subscription_confirmation(new_customer.mobile_number, business.twilio_number)
 				else
 					subscription = BusinessesCustomer.where(business_id: business.id, customer_id: customer.id).last
 					if subscription.subscribed?
@@ -70,7 +70,7 @@ class BusinessSmsController < ApplicationController
 							business.send_customer_unsubscribe_sms(customer_mobile_number)
 						else
 							subscription.subscribe
-						  	Customer.send_subscription_confirmation(customer_mobile_number, business.mobile_number)
+						  	Customer.send_subscription_confirmation(customer_mobile_number, business.twilio_number)
 						end
 					end
 				end
