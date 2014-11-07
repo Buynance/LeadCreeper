@@ -12,6 +12,7 @@ class Business < ActiveRecord::Base
       after_transition :on => :passed_confirmation do |business, t|
       	business.create_twilio_number
         business.send_business_signup_acceptance
+        business.save
       end
 
       event :passed_confirmation do
