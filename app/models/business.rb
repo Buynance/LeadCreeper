@@ -67,7 +67,7 @@ class Business < ActiveRecord::Base
     end
 
     def create_twilio_number
-    	self.twilio_number = TwilioLib.create_phone_number(self.mobile_number,  {sms_url: "http://buynance-sms.ngrok.com/businesses/#{self.id}/sms/recieve_sms"})
+    	self.twilio_number = TwilioLib.create_phone_number(self.mobile_number,  {sms_url: "http://buynance-sms.herokuapp.com/businesses/#{self.id}/sms/recieve_sms"})
     end
 
     def find_customer_by_mobile_number(mobile_number)
