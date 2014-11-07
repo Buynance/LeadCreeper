@@ -4,7 +4,8 @@ require 'twilio_lib'
 class Business < ActiveRecord::Base
 	before_create :parse_landline_number, :create_opt_in_code
 
-  has_and_belongs_to_many :customers
+  has_many :businesses_customers
+  has_many :customers, through: :businesses_customers
 
 	state_machine :state, :initial => :awaiting_confirmation do
 
@@ -25,8 +26,9 @@ class Business < ActiveRecord::Base
 
   def send_mass_sms_to_customers(message)
     self.customers.each do |customer|
-       TwilioLib.send_text(customer.mobile_number, message, self.twilio_number)
+       TwilioLib.send_text(customer.mobile_number, message, self.twilio_number) if BusinessesCustomer.find_by(business_id: self.id, customer_id: customer.id)
     end
+      TwilioLib.send_text(customer.mobile_number, "Your message has been delivered to #{self.customers.size} subscribers.", self.twilio_number)
   end
   
 	def parse_landline_number     
@@ -40,7 +42,7 @@ class Business < ActiveRecord::Base
   end
 
     def self.send_business_found_sms(mobile_number)
-    	 TwilioLib.send_text(mobile_number, "You have already signed up to this service.")
+       TwilioLib.send_text(mobile_number, "You are already participating in this service.")
     end
 
     def self.send_customer_found_sms(mobile_number)
@@ -58,6 +60,10 @@ class Business < ActiveRecord::Base
 
     def self.send_business_not_found_sms(mobile_number)
       TwilioLib.send_text(mobile_number, "Unfortunately this business does not participate in this program.")
+    end
+
+    def self.send_custumer_unsubscribe_sms(mobile_number)
+      TwilioLib.send_text(mobile_number, "You have unsubscribed. To subscribe just sms this number again.")
     end
 
     def create_twilio_number

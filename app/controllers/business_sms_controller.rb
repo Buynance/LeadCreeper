@@ -30,9 +30,9 @@ class BusinessSmsController < ApplicationController
 		business = Business.find_by(id: params[:id])
 		if business
 			if business.mobile_number == incoming_mobile_number
-				send_mass_sms
+				recieve_business_sms
 			else
-				add_customer
+				recieve_customer_sms
 			end
 		else
 			Business.send_business_not_found_sms(customer_mobile_number)
@@ -46,23 +46,39 @@ class BusinessSmsController < ApplicationController
 
 	private
 
-		def add_customer
+		def recieve_customer_sms
 			customer_mobile_number = params[:From]
 			business = Business.search_by_mobile_number(params[:To])
+			customer  = business.find_customer_by_mobile_number(customer_mobile_number)
 
 			unless business.nil?
-				unless business.find_customer_by_mobile_number(customer_mobile_number)
-					customer = Customer.create(mobile_number: customer_mobile_number)
-					business.customers << customer
+				unless customer
+					new_customer = Customer.create(mobile_number: customer_mobile_number)
+					business.customers << new_customer
 				else
-					Business.send_customer_found_sms(customer_mobile_number)
+					subscription = BusinessesCustomer.where(business_id: business.id, customer_id: customer.id).last
+					if subscription.subscribed?
+						if params[:Body] == "remove"
+							subscription.unsubscribe
+							Business.send_custumer_unsubscribe_sms(customer_mobile_number)
+						else
+						  	Business.send_customer_found_sms(customer_mobile_number)
+						end
+					elsif subscription.unsubscribed?
+						if params[:Body] == "remove"
+							Business.send_custumer_unsubscribe_sms(customer_mobile_number)
+						else
+							subscription.subscribe
+						  	Customer.send_subscription_confirmation(customer_mobile_number)
+						end
+					end
 				end
 			else
 				Business.send_business_not_found_sms(customer_mobile_number)
 			end
 		end
 
-		def send_mass_sms
+		def recieve_business_sms
 			business = Business.search_by_mobile_number(params[:To])
 
 			unless business.nil?

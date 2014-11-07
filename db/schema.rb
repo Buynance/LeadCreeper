@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141106101809) do
+ActiveRecord::Schema.define(version: 20141107055554) do
 
   create_table "businesses", force: true do |t|
     t.string   "twilio_number"
@@ -24,9 +24,10 @@ ActiveRecord::Schema.define(version: 20141106101809) do
     t.string   "state"
   end
 
-  create_table "businesses_customers", id: false, force: true do |t|
+  create_table "businesses_customers", force: true do |t|
     t.integer "business_id", null: false
     t.integer "customer_id", null: false
+    t.string  "state"
   end
 
   create_table "customers", force: true do |t|
